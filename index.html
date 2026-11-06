@@ -1,0 +1,239 @@
+
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>BeautAR - Cosmetics Showcase</title>
+
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+  <script>
+  
+    AFRAME.registerComponent('color-changer', {
+      init: function () {
+        const colors = ['#E91E63', '#FFC107', '#9C27B0', '#4CAF50', '#03A9F4'];
+        let index = 0;
+        this.el.addEventListener('click', () => {
+          index = (index + 1) % colors.length;
+          this.el.setAttribute('color', colors[index]);
+        });
+      }
+    });
+
+    <!--growing lipgloss-->
+    AFRAME.registerComponent('grow-on-click', {
+      init: function () {
+        let enlarged = false;
+        this.el.addEventListener('click', () => {
+          enlarged = !enlarged;
+          this.el.setAttribute('scale', enlarged ? '0.08 0.08 0.08' : '0.05 0.05 0.05');
+        });
+      }
+    });
+
+    <!--marker status-->
+    AFRAME.registerComponent('marker-status', {
+      init: function () {
+        const banner = document.querySelector('#status');
+        this.el.addEventListener('markerFound', () => {
+          banner.textContent = 'BeautyBox AR Ready! Explore our cosmetics.';
+          banner.style.background = '#2E7D32';
+        });
+        this.el.addEventListener('markerLost', () => {
+          banner.textContent = 'Marker Not Detected - Point at the Hiro marker';
+          banner.style.background = '#C62828';
+        });
+      }
+    });
+
+    <!--Gemini animation-->
+AFRAME.registerComponent('glitter-sparks', {
+  init: function () {
+    const colors = ['#FFD700', '#FFF8DC', '#FF69B4', '#E6E6FA', '#00FFFF'];
+    const count = 16; 
+
+    for (let i = 0; i < count; i++) {
+      let spark = document.createElement('a-tetrahedron');
+
+      // Random starting offset around the text label
+      let posX = (Math.random() - 0.5) * 1.8;
+      let posY = (Math.random() - 0.5) * 0.4;
+      let posZ = (Math.random() - 0.5) * 0.3;
+
+      let startPos = `${posX} ${posY} ${posZ}`;
+      
+
+      let endX = posX * 2.2;
+      let endY = posY * 2.5 + 0.2;
+      let endZ = posZ * 2.2;
+      let endPos = `${endX} ${endY} ${endZ}`;
+
+      let color = colors[Math.floor(Math.random() * colors.length)];
+      let scale = (Math.random() * 0.02 + 0.01).toFixed(3);
+      let dur = Math.floor(Math.random() * 1500 + 1500);
+      let delay = Math.floor(Math.random() * 2000);
+
+      spark.setAttribute('radius', '0.5');
+      spark.setAttribute('color', color);
+      spark.setAttribute('position', startPos);
+      spark.setAttribute('scale', `${scale} ${scale} ${scale}`);
+      spark.setAttribute('material', 'shader: flat; opacity: 0.9; transparent: true');
+
+      // Floating outwards animation
+      spark.setAttribute('animation__move', {
+        property: 'position',
+        from: startPos,
+        to: endPos,
+        dur: dur,
+        easing: 'easeOutQuad',
+        loop: true,
+        delay: delay
+      });
+
+      // Twinkling/fading animation
+      spark.setAttribute('animation__fade', {
+        property: 'material.opacity',
+        from: 0.9,
+        to: 0,
+        dur: dur,
+        easing: 'easeInOutSine',
+        loop: true,
+        delay: delay
+      });
+
+      // Spinning animation
+      spark.setAttribute('animation__rotate', {
+        property: 'rotation',
+        to: '360 360 360',
+        dur: dur,
+        easing: 'linear',
+        loop: true
+      });
+
+      this.el.appendChild(spark);
+    }
+  }
+});
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #status {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      padding: 13px;
+      text-align: center;
+      color: white;
+      background: red;
+      font-size: 15px;
+      font-weight: bold;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Status banner -->
+  <div id="status">
+    checking for Hiro marker...
+  </div>
+
+  <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
+
+    <!-- loading 3D models -->
+    <a-assets timeout="20000">
+      <a-asset-item id="perfume-model" src="models/perfume.glb"></a-asset-item>
+      <a-asset-item id="lipGloss-model" src="models/lipGloss.glb"></a-asset-item>
+      <a-asset-item id="BlenderSponge-model" src="models/BlenderSponge.glb"></a-asset-item>
+       <a-asset-item id="brush-model" src="models/brush.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- HIRO MARKER -->
+    <a-marker preset="hiro" marker-status>
+
+    <!--rotation of the container -->
+      <a-entity animation="property: rotation; to: 0 360 0; dur: 20000; easing: linear; loop: true">
+
+        <!-- DISPLAY PLATFORM -->
+        <a-box position="0 0.04 0" width="2" height="0.08" depth="2" color="#E8C7D0"></a-box>
+
+        <!-- LIPSTICK (3D GLB MODEL) -->
+        <a-entity
+          class="clickable"
+          grow-on-click
+          gltf-model="#lipGloss-model"
+          position="-0.43 0.35 0.08"
+          scale="0.05 0.05 0.05">
+        </a-entity>
+
+        <!-- COMPACT POWDER -->
+        <a-cylinder position="0.25 0.14 0.15" radius="0.19" height="0.12" color="#D4AF37"></a-cylinder>
+        <a-cylinder position="0.25 0.23 0.15" radius="0.19" height="0.05" color="#F4D7DC"></a-cylinder>
+
+        <!-- MAKEUP SPONGE -->
+        <a-entity gltf-model="#BlenderSponge-model" position="0.48 0.3 -0.36" scale="0.02 0.02 0.02"></a-entity>
+
+        <!-- MAKEUP BRUSH -->
+        <a-entity gltf-model="#brush-model" position="0.70 0.30 -0.27" scale="0.02 0.02 0.02"></a-entity>
+
+        
+        <!-- ORIGINAL WORKSHOP COLOUR-CHANGING BALL -->
+
+<a-sphere
+    id="workshop-ball"
+    class="clickable"
+    color-changer
+    position="0.58 0.18 0.38"
+    radius="0.13"
+    color="#D8A6A0">
+</a-sphere>
+
+        
+        <!-- REAL 3D PERFUME MODEL -->
+        <a-entity gltf-model="#perfume-model" position="0.02 0.35 -0.34" scale="0.06 0.06 0.06"></a-entity>
+      
+     <!-- STATIONARY TEXT -->
+    <a-entity position="0 1.35 0" glitter-sparks>
+
+        <a-text
+            value="BEAUTYAR COSMETICS"
+            position="0 0.10 0"
+            align="center"
+            width="3.5"
+            color="#8E2454">
+        </a-text>
+
+        <a-text
+            value="Explore Beauty"
+            position="0 -0.10 0"
+            align="center"
+            width="2.5"
+            color="#111111">
+        </a-text>
+
+    </a-entity>
+
+        
+      
+  </a-marker>
+
+    <!-- CAMERA + CLICK DETECTION -->
+    <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
+
+</a-scene>
+
+</body>
+</html>
