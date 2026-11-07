@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeautyAR Cosmetics</title>
+
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+  <script>
+    // Ball from the workshop. Each tap moves it on to the next colour
+    AFRAME.registerComponent('color-changer', {
+      init: function () {
+        const colors = ['#E91E63', '#FFC107', '#9C27B0', '#4CAF50', '#03A9F4'];
+        let index = 0;
+        this.el.addEventListener('click', () => {
+          index = (index + 1) % colors.length;
+          this.el.setAttribute('color', colors[index]);
+        });
+      }
+    });
+
+    // Tap to grow, tap again to shrink back. size is the normal scale, factor is how much bigger it gets
+    AFRAME.registerComponent('grow-on-tap', {
+      schema: {
+        size: { type: 'number', default: 0.05 },
+        factor: { type: 'number', default: 1.6 }
+      },
+      init: function () {
+        let big = false;
+        this.el.addEventListener('click', () => {
+          big = !big;
+          const s = big ? this.data.size * this.data.factor : this.data.size;
+          this.el.setAttribute('animation__grow', {
+            property: 'scale',
+            to: `${s} ${s} ${s}`,
+            dur: 400,
+            easing: 'easeOutBack'
+          });
+        });
+      }
+    });
+
+    // Shows the perfume's mist for a second or so after a tap.
+    // clearTimeout means tapping again quickly doesn't hide it early
+    AFRAME.registerComponent('spritz', {
+      init: function () {
+        const mist = this.el.querySelector('.mist');
+        let timer = null;
+        this.el.addEventListener('click', () => {
+          mist.setAttribute('visible', true);
+          clearTimeout(timer);
+          timer = setTimeout(() => mist.setAttribute('visible', false), 1200);
+        });
+      }
+    });
+
+    // Banner goes green when the marker's found, red when it's lost
+    AFRAME.registerComponent('marker-status', {
+      init: function () {
+        const banner = document.querySelector('#status');
+        this.el.addEventListener('markerFound', () => {
+          banner.textContent = 'Found it! Tap a product to see what it does.';
+          banner.style.background = '#2E7D32';
+        });
+        this.el.addEventListener('markerLost', () => {
+          banner.textContent = 'Lost the marker. Point the camera back at it.';
+          banner.style.background = '#C62828';
+        });
+      }
+    });
+
+    // Glitter around the title (generated with Gemini)
+    AFRAME.registerComponent('glitter-sparks', {
+      init: function () {
+        const colors = ['#FFD700', '#FFF8DC', '#FF69B4', '#E6E6FA', '#00FFFF'];
+        const count = 16;
+
+        for (let i = 0; i < count; i++) {
+          let spark = document.createElement('a-tetrahedron');
+
+          let posX = (Math.random() - 0.5) * 1.8;
+          let posY = (Math.random() - 0.5) * 0.4;
+          let posZ = (Math.random() - 0.5) * 0.3;
+          let startPos = `${posX} ${posY} ${posZ}`;
+          let endPos = `${posX * 2.2} ${posY * 2.5 + 0.2} ${posZ * 2.2}`;
+
+          let color = colors[Math.floor(Math.random() * colors.length)];
+          let scale = (Math.random() * 0.02 + 0.01).toFixed(3);
+          let dur = Math.floor(Math.random() * 1500 + 1500);
+          let delay = Math.floor(Math.random() * 2000);
+
+          spark.setAttribute('radius', '0.5');
+          spark.setAttribute('color', color);
+          spark.setAttribute('position', startPos);
+          spark.setAttribute('scale', `${scale} ${scale} ${scale}`);
+          spark.setAttribute('material', 'shader: flat; opacity: 0.9; transparent: true');
+
+          spark.setAttribute('animation__move', {
+            property: 'position', from: startPos, to: endPos,
+            dur: dur, easing: 'easeOutQuad', loop: true, delay: delay
+          });
+          spark.setAttribute('animation__fade', {
+            property: 'material.opacity', from: 0.9, to: 0,
+            dur: dur, easing: 'easeInOutSine', loop: true, delay: delay
+          });
+          spark.setAttribute('animation__rotate', {
+            property: 'rotation', to: '360 360 360',
+            dur: dur, easing: 'linear', loop: true
+          });
+
+          this.el.appendChild(spark);
+        }
+      }
+    });
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #status {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      padding: 13px;
+      text-align: center;
+      color: white;
+      background: #C62828;
+      font-size: 15px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    #marker-link {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      z-index: 999;
+      background: rgba(255, 255, 255, 0.9);
+      color: #8E2454;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="status">Looking for the Hiro marker...</div>
+  <a id="marker-link" href="marker.html">Need the marker?</a>
+
+  <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
+
+    <a-assets timeout="20000">
+      <a-asset-item id="perfume-model" src="models/perfume.glb"></a-asset-item>
+      <a-asset-item id="lip-gloss-model" src="models/lip-gloss.glb"></a-asset-item>
+      <a-asset-item id="sponge-model" src="models/sponge.glb"></a-asset-item>
+      <a-asset-item id="brush-model" src="models/brush.glb"></a-asset-item>
+    </a-assets>
+
+    <a-marker preset="hiro" marker-status>
+
+      <!-- Slow turntable: the stand and everything on it turn once every 30 seconds.
+           The title is left outside it so the text stays still -->
+      <a-entity animation__turntable="property: rotation; to: 0 360 0; dur: 30000; easing: linear; loop: true">
+
+        <!-- the stand everything sits on -->
+        <a-box position="0 0.04 0" width="2" height="0.08" depth="2" color="#E8C7D0"></a-box>
+
+        <!-- back row: perfume, lip gloss, brush -->
+        <a-entity class="clickable" spritz position="-0.5 0.5 -0.4"
+          animation__float="property: position; from: -0.5 0.5 -0.4; to: -0.5 0.58 -0.4; dur: 2000; easing: easeInOutSine; dir: alternate; loop: true">
+          <a-entity gltf-model="#perfume-model" scale="0.035 0.035 0.035"></a-entity>
+          <a-entity class="mist" visible="false" position="0.1 0.44 0">
+            <a-sphere radius="0.05" position="0 0 0" material="color: #FFE4EE; opacity: 0.55; transparent: true"></a-sphere>
+            <a-sphere radius="0.04" position="0.08 0.03 0" material="color: #FFFFFF; opacity: 0.45; transparent: true"></a-sphere>
+            <a-sphere radius="0.035" position="0.15 -0.01 0.02" material="color: #FFE4EE; opacity: 0.35; transparent: true"></a-sphere>
+            <a-sphere radius="0.025" position="0.21 0.02 -0.01" material="color: #FFFFFF; opacity: 0.25; transparent: true"></a-sphere>
+          </a-entity>
+        </a-entity>
+
+        <a-entity class="clickable" grow-on-tap="size: 0.05"
+          gltf-model="#lip-gloss-model" position="0 0.38 -0.35" scale="0.05 0.05 0.05"></a-entity>
+
+        <a-entity gltf-model="#brush-model" position="0.5 0.37 -0.4" scale="0.02 0.02 0.02"></a-entity>
+
+        <!-- front row: compact, sponge, ball -->
+        <!-- The lid is wrapped in an entity placed at the compact's back edge,
+             so the rotation swings it open like a hinge instead of spinning it in place -->
+        <a-cylinder position="-0.4 0.13 0.35" radius="0.2" height="0.1" color="#D4AF37"></a-cylinder>
+        <a-cylinder position="-0.4 0.185 0.35" radius="0.16" height="0.01" color="#E9B9A6"></a-cylinder>
+        <a-entity position="-0.4 0.18 0.15"
+          animation__lid="property: rotation; from: 0 0 0; to: -70 0 0; dur: 2500; easing: easeInOutQuad; dir: alternate; loop: true">
+          <a-cylinder position="0 0.02 0.2" radius="0.2" height="0.04" color="#F4D7DC"></a-cylinder>
+        </a-entity>
+
+        <a-entity gltf-model="#sponge-model" position="0.15 0.28 0.4" scale="0.025 0.025 0.025"></a-entity>
+
+        <a-sphere class="clickable" color-changer position="0.6 0.21 0.4" radius="0.13" color="#D8A6A0"></a-sphere>
+
+      </a-entity>
+
+      <a-entity position="0 1.35 0" glitter-sparks>
+        <a-text value="BEAUTYAR COSMETICS" position="0 0.10 0" align="center" width="3.5" color="#8E2454" material="side: double"></a-text>
+        <a-text value="Explore Beauty" position="0 -0.10 0" align="center" width="2.5" color="#6DF7E6" material="side: double"></a-text>
+      </a-entity>
+
+    </a-marker>
+
+    <a-entity camera cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .clickable"></a-entity>
+
+  </a-scene>
+</body>
+</html>
