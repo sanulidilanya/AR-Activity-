@@ -1,5 +1,5 @@
 # AR-Activity
-Members- Chavini, Menaka, Sanuli, Sonal, Sonali
+Members- Chavini, Menaka, Sanuli, Sonal, Sonali, Thanuja 
 
 This is an AR activity focused on developing a simple cosmetic showcase application using A-Frame and AR.js. 
 
