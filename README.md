@@ -9,4 +9,4 @@ This is an activity based on AR to create a simple project on Cosmetic applicati
 3. 3D model of brush- Brush Large Blush by MilkAndBanana (https://poly.pizza/m/Ykq6twWgsJ)
 4. 3D MOdel of lipgloss- Bottle Lip Gloss by MilkAndBanana (https://poly.pizza/m/ovDqsJt3xw)
 
-Netlify app link- https://stupendous-madeleine-940c4e.netlify.app 
+Netlify app link- https://fancy-gelato-3575f5.netlify.app
