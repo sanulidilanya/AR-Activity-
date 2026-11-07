@@ -1,7 +1,7 @@
 # AR-Activity
 Members- Chavini, Menaka, Sanuli, Sonal, Sonali
 
-This is an activity based on AR to create a simple project on Cosmetic application A-frames and AR.js 
+This is an AR activity focused on developing a simple cosmetic showcase application using A-Frame and AR.js. 
 
 3D Models were included into this project:
 1.3D Model of bottle of perfume - Bottle Perfume by MilkAndBanana (https://poly.pizza/m/Gcw4eo7l3H)
